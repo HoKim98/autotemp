@@ -1,3 +1,5 @@
+#!/bin/python
+
 class Temperature:
     def __init__(self):
         from zeus import ZeusSession

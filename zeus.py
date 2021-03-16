@@ -42,7 +42,8 @@ class ZeusSession:
             pg_nm='',
             page_open_time='',
         )
-        self._mbr_no, self._dept_cd = _get(content, 'GRSC')[:2]
+        self._mbr_no, self._dept_cd, *_ = \
+            _get(content, 'GRSC') or _get(content, 'USR01.UNIV')
 
     def _post(self, path: str, **payload):
         url = f'https://zeus.gist.ac.kr' + path
@@ -89,4 +90,7 @@ def _convert(value) -> str:
 
 
 def _get(content: str, key: str) -> list:
-    return content.split(key)[1].split(SEP)[0].split(SEP2)[1:]
+    try:
+        return content.split(key)[1].split(SEP)[0].split(SEP2)[1:]
+    except:
+        return None
