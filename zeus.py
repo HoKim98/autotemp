@@ -40,12 +40,11 @@ class ZeusSession:
             path='/sys/main/role.do',
             pg_key='',
             pg_nm='',
-            page_open_time='',
         )
         self._mbr_no, self._dept_cd, *_ = \
             _get(content, 'GRSC') or _get(content, 'USR01.UNIV')
 
-    def _post(self, path: str, **payload):
+    def _post(self, path: str, pg_key: str, **payload):
         url = f'https://zeus.gist.ac.kr' + path
         headers = {
             'Host': 'zeus.gist.ac.kr',
@@ -60,6 +59,8 @@ class ZeusSession:
         }
 
         payload['WMONID'] = str(self._session.cookies['WMONID'])
+        payload['pg_key'] = pg_key
+        payload['page_open_time'] = ''
         payload = 'SSV:utf-8' + SEP + \
             SEP.join(f'{str(k)}={_convert(v)}' for k,
                      v in payload.items()) + SEP
@@ -68,10 +69,19 @@ class ZeusSession:
         assert r.status_code == 200
         return r.content.decode('utf-8')
 
-    def save(self, **payload):
+    def select(self, pg_key: str, **payload):
+        return _get(self._post(
+            path='/usd/usdAsstcrDiaryAplyE/select.do',
+            pg_key=pg_key,
+            studt_no=self._mbr_no,
+            **payload,
+        ), 'N' + SEP2)
+
+    def save(self, pg_key: str, **payload):
         from datetime import datetime
         return self._post(
             path='/amc/amcDailyTempRegE/save.do',
+            pg_key=pg_key,
             chk_dt=datetime.today().strftime(r'%Y-%m-%d'),
             mbr_no=self._mbr_no,
             dept_cd=self._dept_cd,
