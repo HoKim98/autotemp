@@ -16,7 +16,7 @@ class Temperature:
 
         self._session.save(
             path='/amc/amcDailyTempRegE/save.do',
-            pg_key='PERS01^PERS01_09^002^AmcDailyTempRegE',
+            pg_name='AmcDailyTempRegE',
             temp=value,
             sympt_1=False,
             sympt_2=False,

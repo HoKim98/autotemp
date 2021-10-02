@@ -10,9 +10,12 @@ class ZeusSession:
 
         self._dept_cd = ''
         self._mbr_no = ''
+        self._system_nm = ''
+        self._fields = {}
 
         self._session = requests.session()
         self._login()
+        self._load_menu()
 
     def _login(self):
         url = 'https://zeus.gist.ac.kr/sys/login/auth.do?callback='
@@ -45,6 +48,13 @@ class ZeusSession:
         self._mbr_no, self._dept_cd, *_ = \
             _get(content, 'GRSC') or _get(content, 'USR01.UNIV')
 
+    def _load_menu(self):
+        self._system_nm = 'PERS' + self._post(
+            path='/sys/main/selectSysMenu.do',
+            pg_key='',
+            sys_div='PERS01',
+        ).split('PERS')[1].split(SEP2)[0]
+
     def _post(self, path: str, pg_key: str, raw: str = None, **payload):
         url = f'https://zeus.gist.ac.kr' + path
         headers = {
@@ -74,20 +84,35 @@ class ZeusSession:
         r = self._session.post(url, headers=headers,
                                data=payload.encode('utf-8'))
         assert r.status_code == 200
+        content = r.content.decode('utf-8')
+
+        content_error = [token.split(SEP)[0]
+                         for token in r.text.split('ErrorMsg:string=')[1:]]
+        if content_error:
+            print(f'debug::payload = {payload}')
+            print(f'debug::content = {content}')
+            raise Exception(f'Zeus error: {content_error[0]}')
         return r.content.decode('utf-8')
 
-    def select(self, path: str, pg_key: str, **payload):
+    def _get_pg_key(self, name: str) -> str:
+        return self._post(
+            path='/sys/main/selectMenu.do',
+            pg_key='',
+            sys_div=self._system_nm,
+        ).split(name)[2][3:] + name
+
+    def select(self, path: str, pg_name: str, **payload):
         return _get(self._post(
             path=path,
-            pg_key=pg_key,
+            pg_key=self._get_pg_key(pg_name),
             studt_no=self._mbr_no,
             **payload,
         ), 'N' + SEP2)
 
-    def save(self, path: str, pg_key: str, **payload):
+    def save(self, path: str, pg_name: str, **payload):
         return self._post(
             path=path,
-            pg_key=pg_key,
+            pg_key=self._get_pg_key(pg_name),
             chk_dt=datetime.today().strftime(r'%Y-%m-%d'),
             mbr_no=self._mbr_no,
             dept_cd=self._dept_cd,
