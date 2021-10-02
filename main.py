@@ -15,6 +15,7 @@ class Temperature:
             raise Exception(f'Invalid value: {value}')
 
         self._session.save(
+            path='/amc/amcDailyTempRegE/save.do',
             pg_key='PERS01^PERS01_09^002^AmcDailyTempRegE',
             temp=value,
             sympt_1=False,
@@ -24,6 +25,7 @@ class Temperature:
             sympt_5=False,
             sympt_6=False,
             spc_ctnt='',
+            gubun='AA',
         )
 
 

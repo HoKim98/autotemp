@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 
 
@@ -61,6 +62,9 @@ class ZeusSession:
         payload['WMONID'] = str(self._session.cookies['WMONID'])
         payload['pg_key'] = pg_key
         payload['page_open_time'] = ''
+        payload['page_open_time_on'] = datetime.now().strftime(
+            r'%Y%m%d%H%M%S%f'
+        )
         payload = 'SSV:utf-8' + SEP + \
             SEP.join(f'{str(k)}={_convert(v)}' for k,
                      v in payload.items()) + SEP
@@ -72,67 +76,22 @@ class ZeusSession:
         assert r.status_code == 200
         return r.content.decode('utf-8')
 
-    def select(self, pg_key: str, **payload):
+    def select(self, path: str, pg_key: str, **payload):
         return _get(self._post(
-            path='/usd/usdAsstcrDiaryAplyE/select.do',
+            path=path,
             pg_key=pg_key,
             studt_no=self._mbr_no,
             **payload,
         ), 'N' + SEP2)
 
-    def save(self, pg_key: str, **payload):
-        from datetime import datetime
+    def save(self, path: str, pg_key: str, **payload):
         return self._post(
-            path='/amc/amcDailyTempRegE/save.do',
+            path=path,
             pg_key=pg_key,
             chk_dt=datetime.today().strftime(r'%Y-%m-%d'),
             mbr_no=self._mbr_no,
             dept_cd=self._dept_cd,
             **payload,
-        )
-
-    def save_task_log(self, cls_id: str, cls_name: str,
-                      date: str, desc: str,
-                      ):
-        from datetime import datetime
-
-        dataset = 'dsSub1'
-        fields = {
-            'ASSTCR_DIARY_YY': 'STRING(4)',
-            'ASSTCR_SLT_SHTM_CD': 'STRING(20)',
-            'ASSTCR_DIARY_MM': 'STRING(2)',
-            'STUDT_NO': 'STRING(20)',
-            'ASSTCR_DIARY_SBJT': 'STRING(20)',
-            'ASSTCR_DIARY_SBJT_NM': 'STRING(200)',
-            'ASSTCR_DIARY_SBJT_DCLSS': 'STRING(20)',
-            'POSI_UNIV_CLSF_CD': 'STRING(20)',
-            'ASSTCR_DIARY_DTTM': 'STRING(8)',
-            'ASSTCR_DIARY_CTNT': 'STRING(500)',
-            'ASSTCR_DIARY_APLY_YN': 'STRING(1)',
-            'MA_LT_SPRF_NO': 'STRING(20)',
-            'APLY_REMK': 'STRING(500)',
-            'KOR_NM': 'STRING(200)',
-            'APLY_NO': 'STRING(20)',
-            'PANEL': 'STRING(20)',
-            'CRUD_TXT': 'STRING(2)',
-            'CRUD_TXT': 'STRING(2)',
-        }
-
-        year = datetime.today().strftime(r'%Y')
-        values = [
-            'I', year, 'USR03.10', '03', self._mbr_no, cls_id, cls_name,
-            '4', 'USR01.UNIV', date, desc,
-            '\x03', '61433', '\x03', '\x03', '2', '\x03', '\x03',
-        ]
-
-        raw = f'Dataset:{dataset}' + SEP + '_RowType_' + SEP2 + \
-            SEP2.join(f'{k}:{v}' for k, v in fields.items()) + SEP +\
-            SEP2.join(values) + SEP * 2
-
-        return self._post(
-            path='/usd/usdAsstcrDiaryAplyE/save.do',
-            pg_key='PERS01^PERS01_09^003^UsdAsstcrDiaryAplyE',
-            raw=raw,
         )
 
 
