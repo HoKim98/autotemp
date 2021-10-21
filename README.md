@@ -10,3 +10,6 @@
 ```bash
 $ python main.py
 ```
+
+### Submission
+![](https://github.com/hy01n/autotemp/blob/master/submit.png)
